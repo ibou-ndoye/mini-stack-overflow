@@ -1,0 +1,21 @@
+# Fichiers de configuration sensibles
+.env
+backend/.env
+frontend/.env
+
+# Environnements virtuels et dépendances
+backend/venv/
+frontend/node_modules/
+
+# Fichiers de build et cache
+__pycache__/
+*.py[cod]
+frontend/dist/
+frontend/build/
+
+# Base de données locale (très important)
+backend/db.sqlite3
+
+# Divers
+.vscode/
+.DS_Store
