@@ -71,7 +71,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # --- BASE DE DONNÉES ---
 DATABASES = {
     'default': dj_database_url.config(
-        default=config('DATABASE_URL', default='postgresql://postgres:postgres@db:5432/stackoverflow'),
+        default=os.getenv('DATABASE_URL'),
         conn_max_age=600,
         conn_health_checks=True,
     )
