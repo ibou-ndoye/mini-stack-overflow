@@ -10,6 +10,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     gcc \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Installation des dépendances Python
@@ -24,4 +25,4 @@ COPY . .
 RUN chmod +x entrypoint.sh 2>/dev/null || true
 
 # Commande de démarrage : Migration + Lancement Gunicorn
-CMD ["sh", "-c", "python manage.py migrate && gunicorn config.wsgi --bind 0.0.0.0:$PORT"]
+ENTRYPOINT ["./entrypoint.sh"]
