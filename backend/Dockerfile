@@ -2,12 +2,11 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Variables d'environnement pour Python
+# Empêche Python de créer des fichiers .pyc et assure un affichage direct des logs
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PORT=8000
+    PYTHONUNBUFFERED=1
 
-# Dépendances système (pour psycopg2 et la santé du conteneur)
+# Installation des dépendances système nécessaires pour PostgreSQL
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     gcc \
@@ -18,11 +17,11 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copie du reste du projet
+# Copie de tout le code source
 COPY . .
 
-# Rendre l'entrypoint exécutable (si présent)
-RUN chmod +x entrypoint.sh
+# Donne les droits d'exécution (au cas où vous utilisez un script)
+RUN chmod +x entrypoint.sh 2>/dev/null || true
 
-# Commande de démarrage directe pour éviter les erreurs d'entrypoint
+# Commande de démarrage : Migration + Lancement Gunicorn
 CMD ["sh", "-c", "python manage.py migrate && gunicorn config.wsgi --bind 0.0.0.0:$PORT"]
