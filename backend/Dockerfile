@@ -23,6 +23,8 @@ COPY . .
 
 # Donne les droits d'exécution (au cas où vous utilisez un script)
 RUN chmod +x entrypoint.sh 2>/dev/null || true
+# Fix potential Windows CRLF line endings
+RUN sed -i 's/\r$//' entrypoint.sh
 
 # Commande de démarrage : Migration + Lancement Gunicorn
 ENTRYPOINT ["./entrypoint.sh"]
