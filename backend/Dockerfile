@@ -1,39 +1,28 @@
-# ---- Multi‑stage Dockerfile for Railway ----
-# Build stage – install dependencies and collect static files
-FROM python:3.11-slim AS builder
+FROM python:3.11-slim
+
 WORKDIR /app
 
-# Environment variables for optimal Python behaviour
+# Variables d'environnement pour Python
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    PORT=8000
 
-# System dependencies (PostgreSQL client for migrations)
+# Dépendances système (pour psycopg2 et la santé du conteneur)
 RUN apt-get update && apt-get install -y \
-    postgresql-client \
+    libpq-dev \
+    gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python packages
-COPY requirements.txt ./
-RUN pip install --upgrade pip && pip install -r requirements.txt
+# Installation des dépendances Python
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Copy source code and collect static files
-COPY . ./
-RUN python manage.py collectstatic --noinput
+# Copie du reste du projet
+COPY . .
 
-# Runtime stage – lightweight image
-FROM python:3.11-slim
-WORKDIR /app
+# Rendre l'entrypoint exécutable (si présent)
+RUN chmod +x entrypoint.sh
 
-# Copy only the needed artefacts from builder
-COPY --from=builder /app /app
-
-# Ensure entrypoint is executable
-COPY entrypoint.sh ./
-RUN chmod +x ./entrypoint.sh
-
-# Expose the port Railway will provide via $PORT (default 8000 for local dev)
-ENV PORT=${PORT:-8000}
-EXPOSE $PORT
-
-# Use the entrypoint which will start Gunicorn on the injected port
-ENTRYPOINT ["/app/entrypoint.sh"]
+# Commande de démarrage directe pour éviter les erreurs d'entrypoint
+CMD ["sh", "-c", "python manage.py migrate && gunicorn config.wsgi --bind 0.0.0.0:$PORT"]
