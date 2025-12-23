@@ -1,34 +1,39 @@
-# Use Python 3.11 slim image
-FROM python:3.11-slim
-
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-# Set work directory
+# ---- Multi‑stage Dockerfile for Railway ----
+# Build stage – install dependencies and collect static files
+FROM python:3.11-slim AS builder
 WORKDIR /app
 
-# Install system dependencies
+# Environment variables for optimal Python behaviour
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# System dependencies (PostgreSQL client for migrations)
 RUN apt-get update && apt-get install -y \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-COPY requirements.txt /app/
+# Install Python packages
+COPY requirements.txt ./
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Copy project
-COPY . /app/
+# Copy source code and collect static files
+COPY . ./
+RUN python manage.py collectstatic --noinput
 
-# Create media directory
-RUN mkdir -p /app/media
+# Runtime stage – lightweight image
+FROM python:3.11-slim
+WORKDIR /app
 
-# Make entrypoint script executable
-COPY entrypoint.sh /app/
-RUN chmod +x /app/entrypoint.sh
+# Copy only the needed artefacts from builder
+COPY --from=builder /app /app
 
-# Expose port
-EXPOSE 8000
+# Ensure entrypoint is executable
+COPY entrypoint.sh ./
+RUN chmod +x ./entrypoint.sh
 
-# Run entrypoint script
+# Expose the port Railway will provide via $PORT (default 8000 for local dev)
+ENV PORT=${PORT:-8000}
+EXPOSE $PORT
+
+# Use the entrypoint which will start Gunicorn on the injected port
 ENTRYPOINT ["/app/entrypoint.sh"]
