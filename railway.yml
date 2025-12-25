@@ -12,3 +12,7 @@ services:
   - name: frontend
     build:
       dockerfile: frontend/Dockerfile
+    proxy:
+      port: 8080
+    depends_on:
+      - backend

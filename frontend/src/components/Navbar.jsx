@@ -3,6 +3,14 @@ import { Link } from 'react-router-dom';
 import { MessageSquare, GraduationCap, User, LogOut, Menu } from 'lucide-react';
 
 const Navbar = () => {
+    const isAuthenticated = !!localStorage.getItem('access_token');
+
+    const handleLogout = () => {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = '/login';
+    };
+
     return (
         <nav className="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -33,12 +41,30 @@ const Navbar = () => {
                             Poser une question
                         </Link>
                         <div className="ml-3 relative flex items-center gap-2">
-                            <Link to="/login" className="text-slate-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
-                                Connexion
-                            </Link>
-                            <Link to="/register" className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all border border-slate-700">
-                                S'inscrire
-                            </Link>
+                            {isAuthenticated ? (
+                                <>
+                                    <Link to="/profile" className="text-slate-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors flex items-center gap-2">
+                                        <User className="w-4 h-4" />
+                                        Mon Profil
+                                    </Link>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="text-red-400 hover:text-red-300 px-3 py-2 text-sm font-medium transition-colors flex items-center gap-2"
+                                    >
+                                        <LogOut className="w-4 h-4" />
+                                        Déconnexion
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <Link to="/login" className="text-slate-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
+                                        Connexion
+                                    </Link>
+                                    <Link to="/register" className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all border border-slate-700">
+                                        S'inscrire
+                                    </Link>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

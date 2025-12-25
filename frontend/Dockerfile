@@ -24,8 +24,8 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Copy built files from build stage
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Expose port 80
-EXPOSE 80
+# Expose default port
+EXPOSE 8080
 
-# Start nginx
+# Use a shell to allow environment variable expansion (optional but port 8080 is standard)
 CMD ["nginx", "-g", "daemon off;"]

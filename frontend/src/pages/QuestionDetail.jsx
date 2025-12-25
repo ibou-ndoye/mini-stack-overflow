@@ -30,17 +30,30 @@ const QuestionDetail = () => {
     }, [id]);
 
     const handleVote = async (value) => {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            navigate('/login');
+            return;
+        }
         try {
             const response = await api.post(`questions/${id}/vote/`, { value });
             setQuestion({ ...question, votes: response.data.votes });
         } catch (err) {
             if (err.response?.status === 401) {
                 navigate('/login');
+            } else {
+                alert("Erreur lors du vote. Veuillez réessayer.");
             }
         }
     };
 
     const handlePostAnswer = async () => {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            navigate('/login');
+            return;
+        }
+
         if (!newAnswer.trim()) return;
         setSubmitting(true);
         try {
@@ -55,6 +68,8 @@ const QuestionDetail = () => {
         } catch (err) {
             if (err.response?.status === 401) {
                 navigate('/login');
+            } else {
+                alert("Erreur lors de la publication de la réponse.");
             }
         } finally {
             setSubmitting(false);

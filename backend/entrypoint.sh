@@ -3,21 +3,18 @@
 # Exit on error
 set -e
 
-# If DATABASE_URL is set, extract host and port
+# If DATABASE_URL is set, wait for database
 if [ -n "$DATABASE_URL" ]; then
-  DB_HOST=$(echo $DATABASE_URL | sed -E 's#postgresql://[^:]+:[^@]+@([^:/]+):.*#\1#')
-  DB_PORT=$(echo $DATABASE_URL | sed -E 's#postgresql://[^:]+:[^@]+@[^:]+:([0-9]+)/.*#\1#')
-  DB_USER=$(echo $DATABASE_URL | sed -E 's#postgresql://([^:]+):.*#\1#')
-  echo "Waiting for PostgreSQL at $DB_HOST:$DB_PORT..."
-  while ! pg_isready -h $DB_HOST -p $DB_PORT -U $DB_USER; do
+  echo "Waiting for PostgreSQL to be ready..."
+  # Use pg_isready with the full DATABASE_URL for robustness
+  while ! pg_isready -d "$DATABASE_URL"; do
     sleep 1
-done
+  done
   echo "PostgreSQL is ready!"
 fi
 
-# Run migrations
+# Run migrations (ensure they are committed to git)
 echo "Running database migrations..."
-python manage.py makemigrations
 python manage.py migrate
 
 # Collect static files

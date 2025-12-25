@@ -9,6 +9,8 @@ const DiplomaList = () => {
     const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
 
+    const [user, setUser] = useState(null);
+
     useEffect(() => {
         const fetchDiplomas = async () => {
             try {
@@ -21,7 +23,17 @@ const DiplomaList = () => {
             }
         };
 
+        const fetchUser = async () => {
+            try {
+                const response = await api.get('profile/');
+                setUser(response.data);
+            } catch (error) {
+                console.log("Utilisateur non connecté ou erreur profile");
+            }
+        };
+
         fetchDiplomas();
+        fetchUser();
     }, []);
 
     const filteredDiplomas = diplomas.filter(d =>
@@ -45,11 +57,13 @@ const DiplomaList = () => {
                     <h1 className="text-3xl font-bold text-white mb-2">Gestion des Diplômes</h1>
                     <p className="text-slate-400">Consultez et gérez les diplômes.</p>
                 </div>
-                {/* Only accessible for STAFF/ADMIN roles ideally */}
-                <Link to="/admin" className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-lg shadow-primary-900/20 w-fit">
-                    <Plus className="w-5 h-5" />
-                    Nouveau Diplôme
-                </Link>
+                {/* Only accessible for STAFF/ADMIN roles */}
+                {user && user.is_staff && (
+                    <Link to="/admin" className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-lg shadow-primary-900/20 w-fit">
+                        <Plus className="w-5 h-5" />
+                        Nouveau Diplôme
+                    </Link>
+                )}
             </div>
 
             <div className="flex flex-col md:flex-row gap-4">
@@ -117,8 +131,8 @@ const DiplomaList = () => {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${diploma.is_signed
-                                                    ? 'bg-green-500/10 text-green-400 border-green-500/20'
-                                                    : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+                                                ? 'bg-green-500/10 text-green-400 border-green-500/20'
+                                                : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
                                                 }`}>
                                                 {diploma.is_signed ? 'Signé' : 'En attente'}
                                             </span>

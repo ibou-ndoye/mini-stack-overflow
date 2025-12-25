@@ -53,7 +53,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def vote(self, request, pk=None):
         question = self.get_object()
         user = request.user
@@ -62,24 +62,30 @@ class QuestionViewSet(viewsets.ModelViewSet):
         if value not in [1, -1]:
             return Response({'error': 'Invalid vote value'}, status=status.HTTP_400_BAD_REQUEST)
 
-        vote, created = Vote.objects.get_or_create(
-            user=user, question=question,
-            defaults={'value': value}
-        )
+        from django.db import transaction
+        with transaction.atomic():
+            vote, created = Vote.objects.get_or_create(
+                user=user, question=question,
+                defaults={'value': value}
+            )
 
-        if not created:
-            if vote.value == value:
-                vote.delete()
-                question.votes = F('votes') - value
+            if not created:
+                if vote.value == value:
+                    # User clicked same vote again: remove vote (toggle)
+                    question.votes = F('votes') - value
+                    vote.delete()
+                else:
+                    # Change vote (e.g. up to down)
+                    old_value = vote.value
+                    question.votes = F('votes') - old_value + value
+                    vote.value = value
+                    vote.save()
             else:
-                old_value = vote.value
-                vote.value = value
-                vote.save()
-                question.votes = F('votes') - old_value + value
-        else:
-            question.votes = F('votes') + value
-        
-        question.save()
+                # New vote
+                question.votes = F('votes') + value
+            
+            question.save()
+            
         question.refresh_from_db()
         return Response({'votes': question.votes})
 
