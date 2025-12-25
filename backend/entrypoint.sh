@@ -13,6 +13,10 @@ if [ -n "$DATABASE_URL" ]; then
   echo "PostgreSQL is ready!"
 fi
 
+# Petite pause pour laisser le réseau interne se stabiliser
+echo "Attente de 5 secondes pour la stabilisation du réseau..."
+sleep 5
+
 # Run migrations (ensure they are committed to git)
 echo "Running database migrations..."
 python manage.py migrate
