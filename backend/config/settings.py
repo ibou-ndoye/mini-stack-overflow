@@ -69,13 +69,22 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # --- BASE DE DONNÉES ---
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv('DATABASE_URL'),
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
-}
+# On essaie de récupérer DATABASE_URL de l'environnement (Railway injecte ça automatiquement)
+# Si absent ou vide, on utilise SQLite par défaut pour éviter le crash.
+tmp_db_url = os.environ.get('DATABASE_URL')
+
+if tmp_db_url:
+    DATABASES = {
+        'default': dj_database_url.config(default=tmp_db_url, conn_max_age=600, conn_health_checks=True)
+    }
+else:
+    # Fallback SQLite pour le build ou local
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # --- AUTHENTIFICATION ---
 AUTH_USER_MODEL = 'api.User'
