@@ -13,13 +13,11 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # --- SÉCURITÉ ---
-# En ligne, SECRET_KEY doit être dans ton .env
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-production-ready-key-change-me')
 
-# DEBUG est True par défaut en local, mais sera False en production via le .env
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-# Autorise localhost et ton futur domaine (ex: stackoverflow.onrender.com)
+# Correction ALLOWED_HOSTS pour accepter une liste depuis Railway
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
 
 # --- APPS ---
@@ -33,13 +31,13 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'api',
-    'whitenoise.runserver_nostatic',  # Pour servir les fichiers statiques proprement
+    'whitenoise.runserver_nostatic',
 ]
 
 # --- MIDDLEWARE ---
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # INDISPENSABLE pour le CSS en ligne
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -69,12 +67,9 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # --- BASE DE DONNÉES ---
-# On essaie de récupérer DATABASE_URL de l'environnement (Railway injecte ça automatiquement)
-# Si absent ou vide, on utilise SQLite par défaut pour éviter le crash.
 tmp_db_url = os.environ.get('DATABASE_URL')
 
 if tmp_db_url:
-    # Log the host for debugging (safe as it doesn't log password)
     from urllib.parse import urlparse
     parsed = urlparse(tmp_db_url)
     print(f"--- INFO: Initialisation de la base de données sur l'hôte: {parsed.hostname} ---")
@@ -83,7 +78,6 @@ if tmp_db_url:
     }
 else:
     print("--- WARNING: DATABASE_URL non trouvée, utilisation de SQLite ---")
-    # Fallback SQLite pour le build ou local
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -108,14 +102,19 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
 
-# --- CORS ---
-CORS_ALLOW_ALL_ORIGINS = True  # À restreindre plus tard pour la sécurité
+# --- CORS & CSRF (CORRECTION ICI) ---
+CORS_ALLOW_ALL_ORIGINS = True 
+
+# Cette ligne est cruciale pour corriger l'erreur Forbidden (403) sur Railway
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS', 
+    default='http://localhost:8000,http://127.0.0.1:8000',
+    cast=lambda v: [s.strip() for s in v.split(',')]
+)
 
 # --- FICHIERS STATIQUES & MEDIA ---
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-# Configuration WhiteNoise pour la compression des fichiers CSS/JS
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
