@@ -74,10 +74,15 @@ WSGI_APPLICATION = 'config.wsgi.application'
 tmp_db_url = os.environ.get('DATABASE_URL')
 
 if tmp_db_url:
+    # Log the host for debugging (safe as it doesn't log password)
+    from urllib.parse import urlparse
+    parsed = urlparse(tmp_db_url)
+    print(f"--- INFO: Initialisation de la base de données sur l'hôte: {parsed.hostname} ---")
     DATABASES = {
         'default': dj_database_url.config(default=tmp_db_url, conn_max_age=600, conn_health_checks=True)
     }
 else:
+    print("--- WARNING: DATABASE_URL non trouvée, utilisation de SQLite ---")
     # Fallback SQLite pour le build ou local
     DATABASES = {
         'default': {
