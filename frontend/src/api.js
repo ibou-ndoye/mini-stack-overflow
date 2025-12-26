@@ -8,6 +8,12 @@ const api = axios.create({
     },
 });
 
+console.log("--- DEBUG API ---");
+console.log("Base URL utilisée :", api.defaults.baseURL);
+if (!import.meta.env.VITE_API_URL) {
+    console.warn("ATTENTION : VITE_API_URL n'est pas définie. Le frontend utilise le chemin relatif /api/ (nécessite un proxy Nginx).");
+}
+
 // Intercepteur de requête pour ajouter le token JWT
 api.interceptors.request.use(
     (config) => {
