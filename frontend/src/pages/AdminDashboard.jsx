@@ -9,28 +9,60 @@ const AdminDashboard = () => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [searchTerm, setSearchTerm] = useState('');
+    const [showModal, setShowModal] = useState(false);
+    const [newDiploma, setNewDiploma] = useState({
+        student_name: '',
+        student_id: '',
+        degree_name: '',
+        major: '',
+        graduation_date: new Date().toISOString().split('T')[0],
+        is_signed: false
+    });
+    const [submitting, setSubmitting] = useState(false);
+
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const [diplomasRes, usersRes] = await Promise.all([
+                api.get('diplomas/'),
+                api.get('users/')
+            ]);
+            const diplomaData = diplomasRes.data.results || diplomasRes.data;
+            const userData = usersRes.data.results || usersRes.data;
+            setDiplomas(Array.isArray(diplomaData) ? diplomaData : []);
+            setUsers(Array.isArray(userData) ? userData : []);
+        } catch (err) {
+            setError("Erreur lors de la récupération des données.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [diplomasRes, usersRes] = await Promise.all([
-                    api.get('diplomas/'),
-                    api.get('users/')
-                ]);
-                const diplomaData = diplomasRes.data.results || diplomasRes.data;
-                const userData = usersRes.data.results || usersRes.data;
-                setDiplomas(Array.isArray(diplomaData) ? diplomaData : []);
-                setUsers(Array.isArray(userData) ? userData : []);
-            } catch (err) {
-                setError("Erreur lors de la récupération des données.");
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchData();
     }, []);
+
+    const handleCreateDiploma = async (e) => {
+        e.preventDefault();
+        setSubmitting(true);
+        try {
+            await api.post('diplomas/', newDiploma);
+            setShowModal(false);
+            setNewDiploma({
+                student_name: '',
+                student_id: '',
+                degree_name: '',
+                major: '',
+                graduation_date: new Date().toISOString().split('T')[0],
+                is_signed: false
+            });
+            fetchData();
+        } catch (err) {
+            alert("Erreur lors de la création du diplôme.");
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     const filteredDiplomas = Array.isArray(diplomas) ? diplomas.filter(d =>
         d.student_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -52,18 +84,112 @@ const AdminDashboard = () => {
     }
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 relative">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-white mb-2">Tableau de Bord Admin</h1>
                     <p className="text-slate-400">Gérez les diplômes et les utilisateurs.</p>
                 </div>
-                <button className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-lg shadow-primary-900/20 w-fit">
+                <button
+                    onClick={() => setShowModal(true)}
+                    className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-lg shadow-primary-900/20 w-fit"
+                >
                     <Plus className="w-5 h-5" />
                     Nouveau Diplôme
                 </button>
             </div>
+
+            {/* Modal de création */}
+            {showModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+                    <div className="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-3xl shadow-2xl p-8 space-y-6 max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-2xl font-bold text-white">Nouveau Diplôme</h2>
+                            <button onClick={() => setShowModal(false)} className="text-slate-500 hover:text-white">✕</button>
+                        </div>
+
+                        <form onSubmit={handleCreateDiploma} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-300">Nom de l'étudiant</label>
+                                <input
+                                    required
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2 px-4 text-white focus:border-primary-500 outline-none"
+                                    value={newDiploma.student_name}
+                                    onChange={e => setNewDiploma({ ...newDiploma, student_name: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-300">Numéro Matricule</label>
+                                <input
+                                    required
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2 px-4 text-white focus:border-primary-500 outline-none"
+                                    value={newDiploma.student_id}
+                                    onChange={e => setNewDiploma({ ...newDiploma, student_id: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-300">Nom du Diplôme</label>
+                                <input
+                                    required
+                                    placeholder="ex: Licence en Informatique"
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2 px-4 text-white focus:border-primary-500 outline-none"
+                                    value={newDiploma.degree_name}
+                                    onChange={e => setNewDiploma({ ...newDiploma, degree_name: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-300">Spécialité</label>
+                                <input
+                                    required
+                                    placeholder="ex: Génie Logiciel"
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2 px-4 text-white focus:border-primary-500 outline-none"
+                                    value={newDiploma.major}
+                                    onChange={e => setNewDiploma({ ...newDiploma, major: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-300">Date de Graduation</label>
+                                <input
+                                    required
+                                    type="date"
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2 px-4 text-white focus:border-primary-500 outline-none"
+                                    value={newDiploma.graduation_date}
+                                    onChange={e => setNewDiploma({ ...newDiploma, graduation_date: e.target.value })}
+                                />
+                            </div>
+                            <div className="flex items-center gap-3 pt-8">
+                                <input
+                                    type="checkbox"
+                                    id="is_signed"
+                                    className="w-5 h-5 accent-primary-600"
+                                    checked={newDiploma.is_signed}
+                                    onChange={e => setNewDiploma({ ...newDiploma, is_signed: e.target.checked })}
+                                />
+                                <label htmlFor="is_signed" className="text-sm font-medium text-slate-300">Signer numériquement</label>
+                            </div>
+
+                            <div className="md:col-span-2 flex justify-end gap-4 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowModal(false)}
+                                    className="px-6 py-2 text-slate-400 hover:text-white transition-colors"
+                                >
+                                    Annuler
+                                </button>
+                                <button
+                                    disabled={submitting}
+                                    type="submit"
+                                    className="bg-primary-600 hover:bg-primary-500 text-white px-8 py-2 rounded-xl font-bold transition-all flex items-center gap-2"
+                                >
+                                    {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                                    Créer le Diplôme
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

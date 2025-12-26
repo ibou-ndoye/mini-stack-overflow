@@ -3,13 +3,26 @@ import { Link } from 'react-router-dom';
 import { MessageSquare, GraduationCap, User, LogOut, Menu } from 'lucide-react';
 
 const Navbar = () => {
+    const [user, setUser] = React.useState(null);
     const isAuthenticated = !!localStorage.getItem('access_token');
+
+    React.useEffect(() => {
+        if (isAuthenticated) {
+            api.get('users/me/')
+                .then(res => setUser(res.data))
+                .catch(() => setUser(null));
+        } else {
+            setUser(null);
+        }
+    }, [isAuthenticated]);
 
     const handleLogout = () => {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         window.location.href = '/login';
     };
+
+    const isAdmin = user?.role === 'ADMIN' || user?.role === 'STAFF';
 
     return (
         <nav className="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50">
@@ -33,6 +46,11 @@ const Navbar = () => {
                                     <GraduationCap className="w-4 h-4" />
                                     Diplômes
                                 </Link>
+                                {isAdmin && (
+                                    <Link to="/admin" className="text-primary-400 hover:text-primary-300 px-3 py-2 rounded-md text-sm font-bold transition-colors border border-primary-500/20 bg-primary-500/5">
+                                        Interface Admin
+                                    </Link>
+                                )}
                             </div>
                         </div>
                     </div>

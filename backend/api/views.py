@@ -132,15 +132,19 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
+class IsAdminOrStaff(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated and 
+                   (request.user.role in ['ADMIN', 'STAFF'] or request.user.is_staff))
+
 class DiplomaViewSet(viewsets.ModelViewSet):
-    queryset = Diploma.objects.all()
+    queryset = Diploma.objects.all().order_by('-issue_date')
     serializer_class = DiplomaSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
     def get_permissions(self):
-        if self.action in ['retrieve', 'list']:
+        if self.action in ['retrieve', 'list', 'verify']:
             return [permissions.AllowAny()]
-        return [permissions.IsAuthenticated()]
+        return [IsAdminOrStaff()]
 
     @action(detail=True, methods=['get'], url_path='verify')
     def verify(self, request, pk=None):
