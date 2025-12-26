@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { MessageSquare, GraduationCap, User, LogOut, Menu } from 'lucide-react';
+import api from '../api';
 
 const Navbar = () => {
     const [user, setUser] = React.useState(null);
@@ -9,8 +10,16 @@ const Navbar = () => {
     React.useEffect(() => {
         if (isAuthenticated) {
             api.get('users/me/')
-                .then(res => setUser(res.data))
-                .catch(() => setUser(null));
+                .then(res => {
+                    console.log("--- DEBUG ROLE ---");
+                    console.log("Utilisateur connecté :", res.data.username);
+                    console.log("Rôle détecté :", res.data.role);
+                    setUser(res.data);
+                })
+                .catch(err => {
+                    console.error("Erreur récup profil :", err);
+                    setUser(null);
+                });
         } else {
             setUser(null);
         }
