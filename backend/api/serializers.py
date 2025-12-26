@@ -29,12 +29,15 @@ class AnswerSerializer(serializers.ModelSerializer):
         fields = ('id', 'author', 'author_name', 'question', 'content', 'created_at', 'updated_at', 'votes', 'is_best_answer', 'comments')
         read_only_fields = ('id', 'author', 'created_at', 'updated_at', 'votes')
 
-    tags = serializers.PrimaryKeyRelatedField(many=True, queryset=Tag.objects.all(), required=False)
+class QuestionSerializer(serializers.ModelSerializer):
+    author_name = serializers.ReadOnlyField(source='author.username')
+    tags_detail = TagSerializer(many=True, read_only=True, source='tags')
+    answers_count = serializers.SerializerMethodField()
     
     class Meta:
         model = Question
         fields = ('id', 'author', 'author_name', 'title', 'description', 'tags', 'tags_detail', 'created_at', 'updated_at', 'votes', 'answers_count')
-        read_only_fields = ('id', 'author', 'created_at', 'updated_at', 'votes')
+        read_only_fields = ('id', 'author', 'tags', 'created_at', 'updated_at', 'votes')
 
     def get_answers_count(self, obj):
         return obj.answers.count()

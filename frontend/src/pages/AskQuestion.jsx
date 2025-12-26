@@ -37,7 +37,7 @@ const AskQuestion = () => {
             const response = await api.post('questions/', {
                 title: formData.title,
                 description: formData.description,
-                tags: [] // We'll handle tags separately or improve the backend
+                tags: tagNames
             });
 
             navigate(`/question/${response.data.id}`);

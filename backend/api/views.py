@@ -51,7 +51,21 @@ class QuestionViewSet(viewsets.ModelViewSet):
         return QuestionSerializer
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        # Récupération des noms de tags depuis la requête
+        tags_data = self.request.data.get('tags', [])
+        question = serializer.save(author=self.request.user)
+        
+        if isinstance(tags_data, list):
+            from django.utils.text import slugify
+            for tag_name in tags_data:
+                tag_name = tag_name.strip()
+                if tag_name:
+                    # On cherche ou on crée le tag par son nom
+                    tag, created = Tag.objects.get_or_create(
+                        name=tag_name,
+                        defaults={'slug': slugify(tag_name)}
+                    )
+                    question.tags.add(tag)
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def vote(self, request, pk=None):
