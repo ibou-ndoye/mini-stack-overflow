@@ -28,7 +28,7 @@ const DiplomaList = () => {
 
         const fetchUser = async () => {
             try {
-                const response = await api.get('profile/');
+                const response = await api.get('users/me/');
                 setUser(response.data);
             } catch (error) {
                 console.log("Utilisateur non connecté ou erreur profile");
