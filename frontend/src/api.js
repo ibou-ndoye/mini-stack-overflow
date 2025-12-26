@@ -1,13 +1,14 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:8000/api/',
+    // CORRECTION : On utilise /api/ pour que Nginx fasse le proxy
+    baseURL: '/api/', 
     headers: {
         'Content-Type': 'application/json',
     },
 });
 
-// Request interceptor to add JWT token
+// Intercepteur de requête pour ajouter le token JWT
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('access_token');
@@ -19,7 +20,7 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// Response interceptor for token refresh handling
+// Intercepteur de réponse pour la gestion du rafraîchissement du token
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
@@ -31,7 +32,8 @@ api.interceptors.response.use(
 
             if (refreshToken) {
                 try {
-                    const response = await axios.post('http://localhost:8000/api/token/refresh/', {
+                    // CORRECTION : Ici aussi, on utilise le chemin relatif
+                    const response = await axios.post('/api/token/refresh/', {
                         refresh: refreshToken,
                     });
                     localStorage.setItem('access_token', response.data.access);
