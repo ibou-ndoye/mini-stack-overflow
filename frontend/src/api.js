@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-    // CORRECTION : On utilise /api/ pour que Nginx fasse le proxy
-    baseURL: '/api/', 
+    // On utilise soit l'URL publique du backend (VITE_API_URL), soit le proxy relatif /api/
+    baseURL: import.meta.env.VITE_API_URL || '/api/',
     headers: {
         'Content-Type': 'application/json',
     },
@@ -32,8 +32,12 @@ api.interceptors.response.use(
 
             if (refreshToken) {
                 try {
-                    // CORRECTION : Ici aussi, on utilise le chemin relatif
-                    const response = await axios.post('/api/token/refresh/', {
+                    // On utilise la baseURL configurée ou l'URL complète via import.meta.env
+                    const refreshUrl = import.meta.env.VITE_API_URL
+                        ? `${import.meta.env.VITE_API_URL}token/refresh/`
+                        : '/api/token/refresh/';
+
+                    const response = await axios.post(refreshUrl, {
                         refresh: refreshToken,
                     });
                     localStorage.setItem('access_token', response.data.access);

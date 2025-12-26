@@ -102,10 +102,9 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
 
-# --- CORS & CSRF (CORRECTION ICI) ---
+# --- CORS & CSRF ---
 CORS_ALLOW_ALL_ORIGINS = True 
 
-# Cette ligne est cruciale pour corriger l'erreur Forbidden (403) sur Railway
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS', 
     default='http://localhost:8000,http://127.0.0.1:8000',
