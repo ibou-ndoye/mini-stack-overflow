@@ -27,6 +27,7 @@ function App() {
           <Route path="/diploma/:id" element={<DiplomaDetail />} />
           <Route path="/verify" element={<Verify />} />
           <Route path="/user/:id" element={<Profile />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </Layout>
     </Router>
