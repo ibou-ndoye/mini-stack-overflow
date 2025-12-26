@@ -15,9 +15,12 @@ const DiplomaList = () => {
         const fetchDiplomas = async () => {
             try {
                 const response = await api.get('diplomas/');
-                setDiplomas(response.data);
+                // Gestion de la pagination (results) ou retour direct (array)
+                const data = response.data.results || response.data;
+                setDiplomas(Array.isArray(data) ? data : []);
             } catch (err) {
                 setError("Erreur lors de la récupération des diplômes.");
+                setDiplomas([]);
             } finally {
                 setLoading(false);
             }
@@ -36,11 +39,11 @@ const DiplomaList = () => {
         fetchUser();
     }, []);
 
-    const filteredDiplomas = diplomas.filter(d =>
-        d.student_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        d.student_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        d.serial_number.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredDiplomas = Array.isArray(diplomas) ? diplomas.filter(d =>
+        d.student_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        d.student_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        d.serial_number?.toLowerCase().includes(searchTerm.toLowerCase())
+    ) : [];
 
     if (loading) {
         return (

@@ -12,9 +12,12 @@ const Home = () => {
         const fetchQuestions = async () => {
             try {
                 const response = await api.get('questions/');
-                setQuestions(response.data);
+                // Support pagination (results) ou array simple
+                const data = response.data.results || response.data;
+                setQuestions(Array.isArray(data) ? data : []);
             } catch (err) {
                 setError("Impossible de charger les questions. Veuillez réessayer plus tard.");
+                setQuestions([]);
             } finally {
                 setLoading(false);
             }

@@ -18,8 +18,10 @@ const AdminDashboard = () => {
                     api.get('diplomas/'),
                     api.get('users/')
                 ]);
-                setDiplomas(diplomasRes.data);
-                setUsers(usersRes.data);
+                const diplomaData = diplomasRes.data.results || diplomasRes.data;
+                const userData = usersRes.data.results || usersRes.data;
+                setDiplomas(Array.isArray(diplomaData) ? diplomaData : []);
+                setUsers(Array.isArray(userData) ? userData : []);
             } catch (err) {
                 setError("Erreur lors de la récupération des données.");
             } finally {
@@ -30,16 +32,16 @@ const AdminDashboard = () => {
         fetchData();
     }, []);
 
-    const filteredDiplomas = diplomas.filter(d =>
-        d.student_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        d.student_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        d.serial_number.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredDiplomas = Array.isArray(diplomas) ? diplomas.filter(d =>
+        d.student_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        d.student_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        d.serial_number?.toLowerCase().includes(searchTerm.toLowerCase())
+    ) : [];
 
-    const filteredUsers = users.filter(u =>
-        u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredUsers = Array.isArray(users) ? users.filter(u =>
+        u.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    ) : [];
 
     if (loading) {
         return (
@@ -193,8 +195,8 @@ const AdminDashboard = () => {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${diploma.is_signed
-                                                    ? 'bg-green-500/10 text-green-400 border-green-500/20'
-                                                    : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+                                                ? 'bg-green-500/10 text-green-400 border-green-500/20'
+                                                : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
                                                 }`}>
                                                 {diploma.is_signed ? 'Signé' : 'En attente'}
                                             </span>
