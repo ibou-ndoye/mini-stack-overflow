@@ -19,6 +19,7 @@ const AdminDashboard = () => {
         is_signed: false
     });
     const [submitting, setSubmitting] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const fetchData = async () => {
         setLoading(true);

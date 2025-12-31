@@ -22,7 +22,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/question/:id" element={<QuestionDetail />} />
           <Route path="/ask" element={<AskQuestion />} />
-          <Route path="/AdminDashboard" element={<AdminDashboard />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/diplomas" element={<DiplomaList />} />
           <Route path="/diploma/:id" element={<DiplomaDetail />} />
           <Route path="/verify" element={<Verify />} />
